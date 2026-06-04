@@ -1,0 +1,85 @@
+-- 1. Order sequence
+SELECT 
+    customer_id,
+    order_date,
+    amount,
+    ROW_NUMBER() OVER (
+        PARTITION BY customer_id 
+        ORDER BY order_date
+    ) AS order_sequence
+FROM sales;
+
+-- 2. First order per customer
+SELECT *
+FROM (
+    SELECT 
+        customer_id,
+        order_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_id 
+            ORDER BY order_date
+        ) AS rn
+    FROM sales
+) t
+WHERE rn = 1;
+
+-- 3. Rank customers
+SELECT 
+    customer_id,
+    SUM(amount) AS total_spent,
+    RANK() OVER (
+        ORDER BY SUM(amount) DESC
+    ) AS rank_num
+FROM sales
+GROUP BY customer_id;
+
+-- 4. Running total
+SELECT 
+    order_date,
+    amount,
+    SUM(amount) OVER (
+        ORDER BY order_date
+    ) AS running_total
+FROM sales;
+
+-- 5. Running total per customer
+SELECT 
+    customer_id,
+    order_date,
+    amount,
+    SUM(amount) OVER (
+        PARTITION BY customer_id 
+        ORDER BY order_date
+    ) AS customer_running_total
+FROM sales;
+
+-- 6. Monthly spending with LAG
+SELECT *
+FROM (
+    SELECT 
+        customer_id,
+        strftime('%Y-%m', order_date) AS month,
+        SUM(amount) AS monthly_spending,
+        LAG(SUM(amount)) OVER (
+            PARTITION BY customer_id
+            ORDER BY strftime('%Y-%m', order_date)
+        ) AS prev_month
+    FROM sales
+    GROUP BY customer_id, month
+) t;
+
+-- 7. Increasing customers
+SELECT *
+FROM (
+    SELECT 
+        customer_id,
+        strftime('%Y-%m', order_date) AS month,
+        SUM(amount) AS monthly_spending,
+        LAG(SUM(amount)) OVER (
+            PARTITION BY customer_id
+            ORDER BY strftime('%Y-%m', order_date)
+        ) AS prev_month
+    FROM sales
+    GROUP BY customer_id, month
+) t
+WHERE monthly_spending > prev_month;

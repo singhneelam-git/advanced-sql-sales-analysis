@@ -1,0 +1,7 @@
+Insights:
+
+Customer 101 makes repeat purchases over time
+Customer 102 shows increasing spending trend
+Some customers only purchase once
+Revenue grows steadily over time (running total)
+A few customers contribute most of the revenue
